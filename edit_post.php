@@ -43,7 +43,7 @@ $img_query = mysqli_query($koneksi, "SELECT * FROM post_images WHERE post_id='$p
         .page-container {
             width: 95%;
             max-width: 800px;
-            margin: 40pxpx auto 40px; /* beri jarak dari navbar */
+            margin: 40px auto 40px; /* beri jarak dari navbar */
         }
 
     </style>
