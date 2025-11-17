@@ -1,7 +1,7 @@
 <?php
 session_start();
 include "koneksi.php";
-include "Components/verified_badge.php";  // ← TAMBAHAN BARU
+include "Components/verified_badge.php"; // fungsi badge
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
@@ -12,6 +12,9 @@ $user_id = $_SESSION['user_id'];
 
 $user_query = mysqli_query($koneksi, "SELECT * FROM users WHERE user_id='$user_id'");
 $user = mysqli_fetch_assoc($user_query);
+
+// Ambil PP (fallback ke default)
+$pp = $user["profile_picture"] ? $user["profile_picture"] : "default_pp.png";
 ?>
 <!DOCTYPE html>
 <html>
@@ -28,7 +31,21 @@ $user = mysqli_fetch_assoc($user_query);
         .page-container {
             width: 95%;
             max-width: 800px;
-            margin: 50px auto 40px; /* beri jarak dari navbar */
+            margin: 50px auto 40px;
+        }
+
+        .welcome-box {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .welcome-pp {
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #ddd;
         }
 
         #preview img {
@@ -68,7 +85,6 @@ $user = mysqli_fetch_assoc($user_query);
         textarea,
         input[type="text"] {
             width: 100%;
-            max-width: 100%;
         }
     </style>
 </head>
@@ -94,43 +110,43 @@ $user = mysqli_fetch_assoc($user_query);
     </div>
 </div>
 
-    <hr>
+<hr>
 
-    <!-- FORM POSTINGAN -->
-    <h3>Buat Postingan Baru</h3>
+<!-- FORM POSTINGAN -->
+<h3>Buat Postingan Baru</h3>
 
-    <form action="Proses/proses_post.php" method="POST" enctype="multipart/form-data" id="postForm">
+<form action="Proses/proses_post.php" method="POST" enctype="multipart/form-data" id="postForm">
 
-        <label>Judul:</label>
-        <input type="text" name="title" required>
+    <label>Judul:</label>
+    <input type="text" name="title" required>
 
-        <br><br>
+    <br><br>
 
-        <label>Isi Post:</label>
-        <textarea name="content" rows="4" required></textarea>
+    <label>Isi Post:</label>
+    <textarea name="content" rows="4" required></textarea>
 
-        <br><br>
+    <br><br>
 
-        <label>Upload Gambar (maks 4):</label><br>
-        <input type="file" id="imageInput" accept="image/*" hidden>
+    <label>Upload Gambar (maks 4):</label><br>
+    <input type="file" id="imageInput" accept="image/*" hidden>
 
-        <button type="button" onclick="document.getElementById('imageInput').click()">Pilih Gambar</button>
-        <p>Maksimal 4 gambar. Kamu bisa pilih satu per satu.</p>
+    <button type="button" onclick="document.getElementById('imageInput').click()">Pilih Gambar</button>
+    <p>Maksimal 4 gambar. Kamu bisa pilih satu per satu.</p>
 
-        <div id="preview"></div>
-        <div id="fileContainer"></div>
+    <div id="preview"></div>
+    <div id="fileContainer"></div>
 
-        <button type="submit">Post</button>
-    </form>
+    <button type="submit">Post</button>
+</form>
 
-    <hr>
+<hr>
 
-    <!-- POSTINGAN -->
-    <h3>Postingan Terbaru</h3>
+<!-- POSTINGAN -->
+<h3>Postingan Terbaru</h3>
 
-    <div id="post-container"></div>
+<div id="post-container"></div>
 
-    <div id="loader">Loading...</div>
+<div id="loader">Loading...</div>
 
 </div> <!-- END PAGE CONTAINER -->
 
@@ -162,7 +178,6 @@ function updatePreview() {
     preview.innerHTML = "";
     selectedFiles.forEach((file, i) => {
         const wrapper = document.createElement("div");
-
         const img = document.createElement("img");
         img.src = URL.createObjectURL(file);
 

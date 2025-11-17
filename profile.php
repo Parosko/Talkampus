@@ -1,6 +1,8 @@
 <?php
 session_start();
 include "koneksi.php";
+include "Components/verified_badge.php"; // ← WAJIB untuk badge
+
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
     exit;
@@ -75,7 +77,10 @@ $post_count = mysqli_fetch_assoc(
     <img class="profile-pic"
          src="<?= htmlspecialchars($u['profile_picture'] ?: 'default_pp.png') ?>">
 
-    <div class="username">@<?= htmlspecialchars($u['username']) ?></div>
+    <div class="username" style="display:flex; align-items:center; gap:6px;">
+    @<?= htmlspecialchars($u['username']) ?>
+    <?= renderVerified($u['is_verified'], 20); ?>
+    </div>
 
     <div class="bio">
         <?= $u['bio'] ? nl2br(htmlspecialchars($u['bio'])) : "<i>Belum ada bio</i>"; ?>

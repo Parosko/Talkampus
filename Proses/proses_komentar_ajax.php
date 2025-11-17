@@ -1,19 +1,21 @@
 <?php
 session_start();
 include "../koneksi.php";
+include "../Components/verified_badge.php"; // ✔ penting untuk badge
 
 if (!isset($_SESSION['user_id'])) {
     exit("forbidden");
 }
 
 $user_id = $_SESSION['user_id'];
-$post_id = $_POST['post_id'];
+$post_id = intval($_POST['post_id']);
 $comment_text = trim($_POST['comment_text']);
+
 if ($comment_text === "") {
     exit("empty");
 }
 
-// Simpan ke DB
+// SIMPAN KOMENTAR
 $stmt = mysqli_prepare($koneksi, "
     INSERT INTO comments (post_id, user_id, comment_text) 
     VALUES (?, ?, ?)
@@ -21,44 +23,51 @@ $stmt = mysqli_prepare($koneksi, "
 mysqli_stmt_bind_param($stmt, "iis", $post_id, $user_id, $comment_text);
 mysqli_stmt_execute($stmt);
 
-// Ambil comment_id yang baru
 $comment_id = mysqli_insert_id($koneksi);
 
-// Ambil data lengkap komentar untuk dikirim kembali
+// AMBIL DATA KOMENTAR + USER
 $q = mysqli_query($koneksi, "
-    SELECT comments.*, users.username 
+    SELECT comments.*, users.username, users.profile_picture, users.is_verified, users.user_id
     FROM comments 
     JOIN users ON comments.user_id = users.user_id 
-    WHERE comment_id='$comment_id'
+    WHERE comments.comment_id = '$comment_id'
 ");
 $c = mysqli_fetch_assoc($q);
 
+// AMBIL OWNER POST UTK IZIN HAPUS
+$postOwner = mysqli_fetch_assoc(mysqli_query(
+    $koneksi, "SELECT user_id FROM posts WHERE post_id='$post_id'"
+))['user_id'];
+
+// Default profile picture
+$pp = $c['profile_picture'] ?: "default_pp.png";
 ?>
 
-<div id="comment-<?php echo $c['comment_id']; ?>" 
-     style="border-bottom:1px solid #ddd; margin-bottom:5px; padding-bottom:5px;">
+<div class="comment-box" id="comment-<?php echo $c['comment_id']; ?>">
 
-    <strong><?php echo htmlspecialchars($c['username']); ?></strong><br>
-    <small><?php echo $c['created_at']; ?></small>
+    <div class="comment-header">
+        <a href="profile.php?id=<?= $c['user_id']; ?>">
+            <img src="<?= $pp; ?>">
+        </a>
 
-    <p id="comment-text-<?php echo $c['comment_id']; ?>">
-        <?php echo nl2br(htmlspecialchars($c['comment_text'])); ?>
+        <a href="profile.php?id=<?= $c['user_id']; ?>" 
+           class="comment-username" style="text-decoration:none;color:black;">
+            <?= htmlspecialchars($c['username']); ?>
+            <?= renderVerified($c['is_verified'], 15); ?>
+        </a>
+
+        <small style="color:#777;"><?= $c['created_at']; ?></small>
+    </div>
+
+    <p id="comment-text-<?= $c['comment_id']; ?>">
+        <?= nl2br(htmlspecialchars($c['comment_text'])); ?>
     </p>
 
-    <!-- TOMBOL EDIT hanya untuk pemilik komentar -->
-    <?php if ($c['user_id'] == $_SESSION['user_id']) : ?>
-        <button onclick="editKomentar(<?php echo $c['comment_id']; ?>)">✏️ Edit</button>
+    <?php if ($c['user_id'] == $_SESSION['user_id']): ?>
+        <button onclick="editKomentar(<?= $c['comment_id']; ?>)">✏️ Edit</button>
     <?php endif; ?>
 
-    <!-- TOMBOL HAPUS untuk pemilik komentar & pemilik postingan -->
-    <?php 
-    // Ambil owner post
-    $postOwner = mysqli_fetch_assoc(mysqli_query(
-        $koneksi, "SELECT user_id FROM posts WHERE post_id='$post_id'"
-    ))['user_id'];
-
-    if ($c['user_id'] == $_SESSION['user_id'] || $postOwner == $_SESSION['user_id']) : ?>
-        <button onclick="hapusKomentar(<?php echo $c['comment_id']; ?>)">🗑️ Hapus</button>
+    <?php if ($c['user_id'] == $_SESSION['user_id'] || $postOwner == $_SESSION['user_id']): ?>
+        <button onclick="hapusKomentar(<?= $c['comment_id']; ?>)">🗑️ Hapus</button>
     <?php endif; ?>
-
 </div>
