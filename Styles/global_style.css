@@ -1,0 +1,17 @@
+/* RESET GLOBAL FIX */
+html, body {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* Semua elemen ikut box-sizing */
+*, *::before, *::after {
+    box-sizing: inherit;
+}
+
+/* Hilangkan scroll sideways (akibat width 100vw) */
+body {
+    overflow-x: hidden;
+    background: #f5f5f5;
+}
