@@ -153,12 +153,36 @@ if (isset($_GET['from']) && $_GET['from'] === "profile" && isset($_GET['uid'])) 
 
 <hr>
 
+<!-- ======================= -->
+<!--  USER INFO SECTION     -->
+<!-- ======================= -->
+<div style="
+    display:flex;
+    align-items:center;
+    gap:12px;
+    margin-bottom:15px;
+">
+
+    <!-- Foto Profil -->
+    <a href="profile.php?id=<?= $post['user_id']; ?>">
+        <img src="<?= $post['profile_picture'] ? $post['profile_picture'] : 'default_pp.png'; ?>"
+             style="width:55px; height:55px; border-radius:50%; object-fit:cover; border:2px solid #eee;">
+    </a>
+
+    <!-- Username + Tanggal -->
+    <div>
+        <a href="profile.php?id=<?= $post['user_id']; ?>" 
+           style="text-decoration:none; color:black; font-weight:bold; font-size:17px;">
+           <?= htmlspecialchars($post['username']); ?>
+        </a>
+        <div style="font-size:13px; color:#777;">
+            Diposting pada <?= $post['created_at']; ?>
+        </div>
+    </div>
+</div>
+
 <h2><?= htmlspecialchars($post['title']); ?></h2>
 
-<p>
-    <strong><?= htmlspecialchars($post['username']); ?></strong>
-    · <?= $post['created_at']; ?>
-</p>
 
 <p><?= nl2br(htmlspecialchars($post['content'])); ?></p>
 

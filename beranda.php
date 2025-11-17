@@ -11,6 +11,7 @@ $user_id = $_SESSION['user_id'];
 
 $user_query = mysqli_query($koneksi, "SELECT * FROM users WHERE user_id='$user_id'");
 $user = mysqli_fetch_assoc($user_query);
+$pp = $user['profile_picture'] ? $user['profile_picture'] : "default_pp.png";
 ?>
 <!DOCTYPE html>
 <html>
@@ -22,12 +23,52 @@ $user = mysqli_fetch_assoc($user_query);
     <link rel="stylesheet" href="Styles/global_style.css">
 
     <style>
-        /* Tambahan kecil spesifik beranda */
+        /* =======================
+           WELCOME PROFILE SECTION
+        ======================== */
+        .welcome-box {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
 
+        .welcome-pp-link {
+            text-decoration: none;
+        }
+
+        .welcome-pp {
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #ddd;
+            transition: transform 0.2s ease;
+        }
+
+        .welcome-pp:hover {
+            transform: scale(1.05);
+        }
+
+        .welcome-text h1 {
+            font-size: 24px;
+            margin: 0;
+            padding: 0;
+        }
+
+        .welcome-caption {
+            margin: 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        /* =======================
+           PREVIEW & FORM STYLE
+        ======================== */
         .page-container {
             width: 95%;
             max-width: 800px;
-            margin: 50px auto 40px; /* beri jarak dari navbar */
+            margin: 50px auto 40px;
         }
 
         #preview img {
@@ -78,12 +119,17 @@ $user = mysqli_fetch_assoc($user_query);
 
 <div class="page-container">
 
-    <h2>Selamat datang, <?= htmlspecialchars($user['username']); ?>!</h2>
+    <!-- WELCOME BOX -->
+    <div class="welcome-box">
+        <a href="profile.php?id=<?= $user_id ?>" class="welcome-pp-link">
+            <img src="<?= htmlspecialchars($pp); ?>" class="welcome-pp">
+        </a>
 
-    <!-- Logout -->
-    <form action="logout.php" method="POST">
-        <button type="submit">Logout</button>
-    </form>
+        <div class="welcome-text">
+            <h1>Selamat datang, <?= htmlspecialchars($user['username']); ?>!</h1>
+            <p class="welcome-caption">Mau lihat apa hari ini?</p>
+        </div>
+    </div>
 
     <hr>
 
@@ -129,7 +175,7 @@ $user = mysqli_fetch_assoc($user_query);
 <script>
 /* ============================================================
    PREVIEW GAMBAR
-=========================================================== */
+============================================================ */
 let selectedFiles = [];
 const imageInput = document.getElementById("imageInput");
 const preview = document.getElementById("preview");
@@ -191,7 +237,7 @@ function updateHiddenInputs() {
 
 /* ============================================================
    LIKE SYSTEM (AJAX)
-=========================================================== */
+============================================================ */
 function toggleLike(postId, btn) {
     fetch("Proses/proses_like_ajax.php?post_id=" + postId)
         .then(r => r.text())
@@ -212,7 +258,7 @@ function toggleLike(postId, btn) {
 
 /* ============================================================
    INFINITE SCROLL BERANDA
-=========================================================== */
+============================================================ */
 let offset = 0;
 let loading = false;
 let noMore = false;
