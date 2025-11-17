@@ -6,9 +6,13 @@ $offset = isset($_GET['offset']) ? intval($_GET['offset']) : 0;
 $limit = isset($_GET['limit']) ? intval($_GET['limit']) : 5;
 $user_id = isset($_SESSION['user_id']) ? intval($_SESSION['user_id']) : 0;
 
-// Ambil posting + PP user
+// Ambil posting + PP + verified
 $post_q = mysqli_query($koneksi, "
-    SELECT posts.*, users.username, users.profile_picture, users.user_id AS poster_id
+    SELECT posts.*, 
+           users.username, 
+           users.profile_picture, 
+           users.is_verified,
+           users.user_id AS poster_id
     FROM posts
     JOIN users ON posts.user_id = users.user_id
     ORDER BY posts.created_at DESC
@@ -46,11 +50,20 @@ while ($post = mysqli_fetch_assoc($post_q)) {
 
     <div style="border:1px solid #ccc; padding:10px; margin-bottom:10px;" id="post-<?php echo $post_id; ?>">
 
-        <!-- FOTO PROFIL + USERNAME LINK TO PROFILE -->
-        <a href="profile.php?id=<?php echo $poster_id; ?>" style="display:flex; align-items:center; text-decoration:none; color:black;">
+        <!-- FOTO PROFIL + USERNAME + VERIF BADGE -->
+        <a href="profile.php?id=<?php echo $poster_id; ?>" 
+           style="display:flex; align-items:center; text-decoration:none; color:black;">
+
             <img src="<?php echo htmlspecialchars($pp); ?>" 
                  style="width:40px; height:40px; border-radius:50%; object-fit:cover; margin-right:10px;">
-            <strong>@<?php echo htmlspecialchars($post['username']); ?></strong>
+
+            <strong>
+                @<?php echo htmlspecialchars($post['username']); ?>
+                <?php if ($post['is_verified']) : ?>
+                    <span style="color:blue; font-size:18px; margin-left:3px;">✔️</span>
+                <?php endif; ?>
+            </strong>
+
         </a>
 
         <small><?php echo $post['created_at']; ?></small>

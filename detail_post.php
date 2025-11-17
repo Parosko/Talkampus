@@ -16,7 +16,7 @@ if (!isset($_GET['id'])) {
 $post_id = intval($_GET['id']);
 
 $post_query = mysqli_query($koneksi, "
-    SELECT posts.*, users.username, users.profile_picture
+    SELECT posts.*, users.username, users.profile_picture, users.is_verified
     FROM posts 
     JOIN users ON posts.user_id = users.user_id 
     WHERE posts.post_id = '$post_id'
@@ -174,6 +174,10 @@ if (isset($_GET['from']) && $_GET['from'] === "profile" && isset($_GET['uid'])) 
         <a href="profile.php?id=<?= $post['user_id']; ?>" 
            style="text-decoration:none; color:black; font-weight:bold; font-size:17px;">
            <?= htmlspecialchars($post['username']); ?>
+            <?php if ($post['is_verified']) : ?>
+            <span style="color:blue; font-size:18px; margin-left:4px;">✔️</span>
+            <?php endif; ?>
+
         </a>
         <div style="font-size:13px; color:#777;">
             Diposting pada <?= $post['created_at']; ?>

@@ -1,6 +1,7 @@
 <?php
 session_start();
 include "koneksi.php";
+include "Components/verified_badge.php";  // ← TAMBAHAN BARU
 
 if (!isset($_SESSION['user_id'])) {
     header("Location: login.php");
@@ -11,7 +12,6 @@ $user_id = $_SESSION['user_id'];
 
 $user_query = mysqli_query($koneksi, "SELECT * FROM users WHERE user_id='$user_id'");
 $user = mysqli_fetch_assoc($user_query);
-$pp = $user['profile_picture'] ? $user['profile_picture'] : "default_pp.png";
 ?>
 <!DOCTYPE html>
 <html>
@@ -23,52 +23,12 @@ $pp = $user['profile_picture'] ? $user['profile_picture'] : "default_pp.png";
     <link rel="stylesheet" href="Styles/global_style.css">
 
     <style>
-        /* =======================
-           WELCOME PROFILE SECTION
-        ======================== */
-        .welcome-box {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
+        /* Tambahan kecil spesifik beranda */
 
-        .welcome-pp-link {
-            text-decoration: none;
-        }
-
-        .welcome-pp {
-            width: 65px;
-            height: 65px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid #ddd;
-            transition: transform 0.2s ease;
-        }
-
-        .welcome-pp:hover {
-            transform: scale(1.05);
-        }
-
-        .welcome-text h1 {
-            font-size: 24px;
-            margin: 0;
-            padding: 0;
-        }
-
-        .welcome-caption {
-            margin: 0;
-            font-size: 14px;
-            color: #666;
-        }
-
-        /* =======================
-           PREVIEW & FORM STYLE
-        ======================== */
         .page-container {
             width: 95%;
             max-width: 800px;
-            margin: 50px auto 40px;
+            margin: 50px auto 40px; /* beri jarak dari navbar */
         }
 
         #preview img {
@@ -119,17 +79,20 @@ $pp = $user['profile_picture'] ? $user['profile_picture'] : "default_pp.png";
 
 <div class="page-container">
 
-    <!-- WELCOME BOX -->
-    <div class="welcome-box">
-        <a href="profile.php?id=<?= $user_id ?>" class="welcome-pp-link">
-            <img src="<?= htmlspecialchars($pp); ?>" class="welcome-pp">
-        </a>
+<!-- WELCOME BOX -->
+<div class="welcome-box">
+    <a href="profile.php?id=<?= $user_id ?>" class="welcome-pp-link">
+        <img src="<?= htmlspecialchars($pp); ?>" class="welcome-pp">
+    </a>
 
-        <div class="welcome-text">
-            <h1>Selamat datang, <?= htmlspecialchars($user['username']); ?>!</h1>
-            <p class="welcome-caption">Mau lihat apa hari ini?</p>
-        </div>
+    <div class="welcome-text">
+        <h1 style="display:flex; align-items:center; gap:6px;">
+            Selamat datang, <?= htmlspecialchars($user['username']); ?>!
+            <?= renderVerified($user['is_verified'], 20); ?>
+        </h1>
+        <p class="welcome-caption">Mau lihat apa hari ini?</p>
     </div>
+</div>
 
     <hr>
 
