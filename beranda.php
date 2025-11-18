@@ -90,9 +90,7 @@ $pp = $user["profile_picture"] ? $user["profile_picture"] : "default_pp.png";
 </head>
 
 <body class="with-navbar">
-
 <?php include "Components/navbar.php"; ?>
-
 <div class="page-container">
 
 <!-- WELCOME BOX -->

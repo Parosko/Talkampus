@@ -19,6 +19,22 @@ if (!$u) {
     exit;
 }
 
+// Hitung statistik follow
+$followers = mysqli_fetch_assoc(mysqli_query($koneksi, "
+    SELECT COUNT(*) AS jml FROM follows WHERE following_id='$profile_id'
+"))['jml'];
+
+$following = mysqli_fetch_assoc(mysqli_query($koneksi, "
+    SELECT COUNT(*) AS jml FROM follows WHERE follower_id='$profile_id'
+"))['jml'];
+
+// Cek apakah viewer sudah follow
+$isFollowing = mysqli_fetch_assoc(mysqli_query($koneksi, "
+    SELECT follow_id FROM follows
+    WHERE follower_id='$viewer_id' AND following_id='$profile_id'
+"));
+$isFollowing = $isFollowing ? true : false;
+
 $post_count = mysqli_fetch_assoc(
     mysqli_query($koneksi, "SELECT COUNT(*) AS jml FROM posts WHERE user_id='$profile_id'")
 )['jml'];
@@ -50,15 +66,23 @@ $post_count = mysqli_fetch_assoc(
         .username { font-size:24px; font-weight:bold; margin-top:10px; }
         .bio { color:#555; margin-top:5px; white-space:pre-line; }
         .joined { color:#777; font-size:14px; margin-bottom:5px; }
-        .stats { color:#333; font-size:15px; margin-bottom:20px; }
+        .stats { color:#333; font-size:15px; margin-bottom:10px; }
 
-        .post-box { background:white; padding:15px; margin-bottom:15px; border-radius:8px; }
-        .post-box img { width:180px; border-radius:8px; margin-right:5px; object-fit:cover; }
-
-        .post-info {
-            margin-top:5px;
-            font-size:14px;
-            color:#444;
+        .follow-btn {
+            padding:8px 15px;
+            border-radius:6px;
+            border:none;
+            cursor:pointer;
+            font-weight:bold;
+            margin-top:10px;
+        }
+        .follow {
+            background:#1d9bf0;
+            color:white;
+        }
+        .unfollow {
+            background:#ddd;
+            color:#333;
         }
 
         button { cursor:pointer; }
@@ -82,6 +106,15 @@ $post_count = mysqli_fetch_assoc(
     <?= renderVerified($u['is_verified'], 20); ?>
     </div>
 
+    <!-- FOLLOW BUTTON (HANYA JIKA BUKAN PROFIL SENDIRI) -->
+    <?php if ($viewer_id != $profile_id): ?>
+        <button id="followBtn"
+                class="follow-btn <?= $isFollowing ? 'unfollow' : 'follow' ?>"
+                onclick="toggleFollow(<?= $profile_id ?>)">
+            <?= $isFollowing ? '✓ Mengikuti' : '+ Ikuti' ?>
+        </button>
+    <?php endif; ?>
+
     <div class="bio">
         <?= $u['bio'] ? nl2br(htmlspecialchars($u['bio'])) : "<i>Belum ada bio</i>"; ?>
     </div>
@@ -91,8 +124,20 @@ $post_count = mysqli_fetch_assoc(
     </div>
 
     <div class="stats">
-        Total Postingan: <b><?= $post_count ?></b>
+    <a href="follow_list.php?id=<?= $profile_id ?>&tab=followers" 
+       style="text-decoration:none; color:#333; font-weight:bold;">
+        Pengikut: <b id="followersCount"><?= $followers ?></b>
+    </a>
+    ·
+    <a href="follow_list.php?id=<?= $profile_id ?>&tab=following" 
+       style="text-decoration:none; color:#333; font-weight:bold;">
+        Mengikuti: <b><?= $following ?></b>
+    </a>
+    <br>
+
+    Total Postingan: <b><?= $post_count ?></b>
     </div>
+
 
     <?php if ($viewer_id == $profile_id) : ?>
         <a href="edit_profile.php">✏️ Edit Profil</a>
@@ -111,6 +156,39 @@ $post_count = mysqli_fetch_assoc(
 
 
 <script>
+/* -----------------------------------------
+   FOLLOW / UNFOLLOW (AJAX)
+------------------------------------------ */
+function toggleFollow(targetId) {
+    const btn = document.getElementById("followBtn");
+
+    const fd = new FormData();
+    fd.append("following_id", targetId);
+
+    fetch("Proses/proses_follow_ajax.php", {
+        method: "POST",
+        body: fd
+    })
+    .then(r => r.json())
+    .then(res => {
+        if (res.status !== "ok") return;
+
+        document.getElementById("followersCount").innerText = res.followers;
+
+        // Ubah tombol
+        if (res.action === "follow") {
+            btn.classList.remove("follow");
+            btn.classList.add("unfollow");
+            btn.innerText = "✓ Mengikuti";
+        } else {
+            btn.classList.remove("unfollow");
+            btn.classList.add("follow");
+            btn.innerText = "+ Ikuti";
+        }
+    });
+}
+
+
 /* -----------------------------------------
    LIKE SYSTEM (AJAX)
 ------------------------------------------ */
@@ -133,27 +211,24 @@ function toggleLike(postId, button) {
 
 
 /* -----------------------------------------
-   SCROLL RESTORE (FIXED VERSION)
+   SCROLL RESTORE (TIDAK DIUBAH)
 ------------------------------------------ */
 const scrollKey = "profileScroll_<?= $profile_id ?>";
 let restoreScroll = null;
 
-// Ambil scroll tersimpan
 if (localStorage.getItem(scrollKey)) {
     restoreScroll = parseInt(localStorage.getItem(scrollKey));
     localStorage.removeItem(scrollKey);
 }
 
-// Simpan scroll ketika keluar
 window.addEventListener("beforeunload", () => {
     localStorage.setItem(scrollKey, window.scrollY);
 });
 
 
 /* -----------------------------------------
-   INFINITE SCROLL (WITH SCROLL RESTORE)
+   INFINITE SCROLL (TIDAK DIUBAH)
 ------------------------------------------ */
-
 let offset = 0;
 let loading = false;
 const limit = 5;
@@ -180,7 +255,6 @@ function loadMorePosts() {
             offset += limit;
             loading = false;
 
-            // ⭐ PULIHKAN SCROLL SETELAH KONTEN PERTAMA SUDAH MASUK
             if (restoreScroll !== null) {
                 window.scrollTo(0, restoreScroll);
                 restoreScroll = null;
@@ -197,7 +271,6 @@ function handleScroll() {
     }
 }
 
-// Load awal
 loadMorePosts();
 window.addEventListener("scroll", handleScroll);
 </script>
